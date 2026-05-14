@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Firebase config (local only - regenerate with flutterfire configure)
+/lib/firebase_options.dart
+/firebase.json
+/.firebaserc
