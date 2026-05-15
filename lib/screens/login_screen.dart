@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../services/auth_service.dart';
 import '../utils/theme.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -10,6 +12,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
+  final AuthService _authService = AuthService();
 
   // Dev mode: accepts any valid email (gmail, etc.)
   // Set to false before pilot launch to enforce .ac.in / .edu.in only.
@@ -32,11 +35,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _onEmailChanged() {
-    // Clear error message when user types again.
     if (_errorMessage != null) {
       setState(() => _errorMessage = null);
     } else {
-      // Trigger rebuild so button enabled state updates.
       setState(() {});
     }
   }
@@ -44,7 +45,6 @@ class _LoginScreenState extends State<LoginScreen> {
   bool get _isEmailValid {
     final email = _emailController.text.trim();
     if (email.isEmpty) return false;
-    // Basic email shape: something@something.something
     final emailRegex = RegExp(r'^[\w\.\-]+@[\w\-]+\.[\w\.\-]+$');
     return emailRegex.hasMatch(email);
   }
@@ -62,7 +62,6 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // In production mode, enforce institute email.
     if (!_devMode && !_isInstituteEmail) {
       setState(
         () => _errorMessage = 'Only .ac.in or .edu.in emails are allowed',
@@ -75,19 +74,56 @@ class _LoginScreenState extends State<LoginScreen> {
       _errorMessage = null;
     });
 
-    // Simulate sending OTP (tomorrow we wire this to Firebase).
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      // Real Firebase call — sends a magic sign-in link to the user's email.
+      await _authService.sendSignInLink(email);
 
-    print('OTP would be sent to: $email');
+      // Save email locally so we can retrieve it when the user clicks the link
+      // and returns to our app. (The link itself does not contain the email
+      // for security reasons.)
+      // We'll set up proper storage tomorrow. For now, just log.
+      print('Magic link sent to: $email');
 
-    if (mounted) {
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('OTP sent to $email (simulated)'),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Check your email at $email for the sign-in link'),
+            duration: const Duration(seconds: 5),
+            backgroundColor: Colors.green.shade700,
+          ),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      // Firebase-specific errors (network, invalid email format, etc.)
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = _humanizeFirebaseError(e);
+        });
+      }
+    } catch (e) {
+      // Any other error
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Something went wrong. Please try again.';
+        });
+        print('Unexpected error sending sign-in link: $e');
+      }
+    }
+  }
+
+  String _humanizeFirebaseError(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'invalid-email':
+        return 'That email address looks invalid';
+      case 'network-request-failed':
+        return 'Network error. Check your internet connection';
+      case 'too-many-requests':
+        return 'Too many attempts. Please wait a few minutes';
+      default:
+        return e.message ?? 'Something went wrong. Please try again.';
     }
   }
 
@@ -102,8 +138,6 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Spacer(flex: 2),
-
-              // Logo
               Center(
                 child: Container(
                   width: 64,
@@ -124,10 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 24),
-
-              // App name
               const Text(
                 'FacultyHub',
                 textAlign: TextAlign.center,
@@ -137,27 +168,18 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: AppColors.textPrimary,
                 ),
               ),
-
               const SizedBox(height: 8),
-
-              // Tagline
               const Text(
                 'Academic openings, shared by the community',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
               ),
-
               const SizedBox(height: 48),
-
-              // Email label
               const Text(
                 'Institute email',
                 style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
               ),
-
               const SizedBox(height: 6),
-
-              // Email input field
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
@@ -194,8 +216,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-
-              // Error message (only shown when there's an error)
               if (_errorMessage != null) ...[
                 const SizedBox(height: 6),
                 Text(
@@ -203,10 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(fontSize: 12, color: Colors.red.shade600),
                 ),
               ],
-
               const SizedBox(height: 16),
-
-              // Send OTP button
               SizedBox(
                 height: 48,
                 child: ElevatedButton(
@@ -233,7 +250,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         )
                       : const Text(
-                          'Send OTP',
+                          'Send sign-in link',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -241,10 +258,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                 ),
               ),
-
               const SizedBox(height: 16),
-
-              // Footer text
               Text(
                 _devMode
                     ? 'Dev mode: any valid email accepted'
@@ -258,7 +272,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   fontWeight: _devMode ? FontWeight.w500 : FontWeight.normal,
                 ),
               ),
-
               const Spacer(flex: 3),
             ],
           ),

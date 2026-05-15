@@ -48,3 +48,6 @@ app.*.map.json
 /lib/firebase_options.dart
 /firebase.json
 /.firebaserc
+
+# Personal dev scripts
+run_web.sh
