@@ -90,3 +90,41 @@
 - Firebase auth emails currently land in Gmail Spam (new sender, no reputation)
 - Need to add Spam folder hint on CheckEmailScreen
 - Long-term: set up custom domain with SPF/DKIM for production
+
+## 2026-05-16 — Day 4
+
+### Built
+- Added shared_preferences package for local email storage
+- Updated AuthService with save/retrieve/clear pending email methods
+- Built AuthGate widget in main.dart - the auth routing layer that decides on startup whether to show LoginScreen, HomeScreen, or process a magic-link callback
+- Built HomeScreen placeholder - shows "You're signed in!" with user's email and a Sign out button
+- Built EmailPromptScreen - fallback when localStorage doesn't contain the email (e.g. user clicked link in different browser/window than they sent from)
+- StreamBuilder listens to Firebase auth state - auto-routes between login and home
+
+### Tested end-to-end (real flow works)
+- Type email → tap Send sign-in link → email arrives in Gmail
+- Click link in Gmail → opens localhost:5000 with Firebase auth URL
+- App detects sign-in link, completes auth
+- If localStorage missing email (cross-window/device case): shows email confirmation prompt
+- Lands on HomeScreen with green checkmark and user email displayed
+- Sign out works - returns to LoginScreen
+- AuthGate correctly routes returning signed-in user to HomeScreen
+
+### Learned
+- localStorage on web is scoped per-origin, but Chrome windows can have isolated storage in some configurations
+- Firebase's recommended pattern is to gracefully handle the missing-email case by re-prompting
+- "Spam folder" issue persists - new Firebase project has no email sender reputation yet
+- StreamBuilder + authStateChanges is the cleanest reactive pattern for auth-aware routing
+- Flutter web dev server sometimes serves stale assets after sign-out + tab close; fix is a clean restart of `./run_web.sh`. This is a dev quirk, not a production issue.
+
+### Cycle 1 status: COMPLETE
+- Login screen UI: done
+- Real Firebase auth: done
+- Multi-window/device fallback: done
+- HomeScreen placeholder: done
+
+### Next session — Cycle 2 begins
+- Design Firestore data model for postings (position_type, employment_type, discipline, etc.)
+- Build home feed UI with hardcoded sample postings
+- Connect feed to Firestore (read-only first)
+- Implement filter chips (discipline, position level, employment type)
