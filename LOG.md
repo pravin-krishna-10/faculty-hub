@@ -128,3 +128,35 @@
 - Build home feed UI with hardcoded sample postings
 - Connect feed to Firestore (read-only first)
 - Implement filter chips (discipline, position level, employment type)
+
+## 2026-05-18 — Day 5 (Cycle 2 begins)
+
+### Built
+- Designed Firestore data model for postings (21 fields total)
+- Decided on flat discipline list over hierarchical categorization
+- Created lib/utils/disciplines.dart — 52 disciplines covering Engineering, Sciences, Humanities, Commerce, Professional fields, plus "Other" fallback
+- Created lib/utils/posting_constants.dart — enum maps for position_type, employment_type, source, status, poster_role
+- Created lib/models/posting.dart — Posting class with fromFirestore() and toFirestore() factory methods
+- Added cloud_firestore package to project
+- Manually seeded 6 sample postings in Firestore covering full diversity:
+  1. Asst Professor in CSE at IIIT Delhi (official, permanent)
+  2. JRF in Computational Biology at IIT Bombay (official, project-based, 2 years)
+  3. Visiting Faculty in English at Bennett (heard, part-time, 1 semester)
+  4. Summer Internship at IIIT Hyderabad NLP lab (official, 8 weeks)
+  5. Asst Professor in Chemistry at IISER Pune (official, permanent)
+  6. Associate Professor in Management at Bennett (heard, permanent)
+
+### Learned
+- Denormalizing poster info (name, institute) on each posting trades data freshness for read efficiency — important for feed performance at scale
+- Specialization field separate from description gives candidates a quick scannable signal beyond just discipline
+- Manual data entry in Firebase Console is tedious but acceptable as a one-time seeding step before the post form exists
+- Two orthogonal axes (position_type × employment_type) handle 50+ combinations with only 19 enum values total
+
+### Decisions deferred
+- Whether to add a hierarchical "category" field above discipline (waited until pilot data shows need)
+- Whether specialization should be free-text or tag-based (going with free-text for v0)
+
+### Next session
+- Build PostingsService — Dart wrapper around Firestore reads
+- Replace HomeScreen placeholder with real feed UI (cards, filter chips, segment toggle)
+- Test that the 6 sample postings appear correctly in the feed
