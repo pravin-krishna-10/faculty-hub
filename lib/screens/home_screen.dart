@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import '../models/posting.dart';
 import '../services/auth_service.dart';
+import '../services/postings_service.dart';
 import '../utils/theme.dart';
+import '../widgets/posting_card.dart';
 import 'login_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -9,76 +12,114 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authService = AuthService();
-    final user = authService.currentUser;
+    final postingsService = PostingsService();
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Spacer(flex: 2),
-              const Icon(Icons.check_circle, size: 64, color: Colors.green),
-              const SizedBox(height: 24),
-              const Text(
-                'You\'re signed in!',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                user?.email ?? 'No email available',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 48),
-              const Text(
-                'Home feed coming in Cycle 2',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textTertiary,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-              const Spacer(flex: 3),
-              SizedBox(
-                height: 48,
-                child: OutlinedButton(
-                  onPressed: () async {
-                    await authService.signOut();
-                    if (context.mounted) {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      );
-                    }
-                  },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.textPrimary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    side: const BorderSide(color: AppColors.border),
-                  ),
-                  child: const Text(
-                    'Sign out',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-            ],
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        title: const Text(
+          'FacultyHub',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textPrimary,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: AppColors.textSecondary),
+            tooltip: 'Sign out',
+            onPressed: () async {
+              await authService.signOut();
+              if (context.mounted) {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+              }
+            },
+          ),
+        ],
+      ),
+      body: StreamBuilder<List<Posting>>(
+        stream: postingsService.watchActivePostings(),
+        builder: (context, snapshot) {
+          // Loading state
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          // Error state
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Colors.red,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Could not load openings.\n${snapshot.error}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          final postings = snapshot.data ?? [];
+
+          // Empty state
+          if (postings.isEmpty) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.inbox_outlined,
+                      size: 48,
+                      color: AppColors.textTertiary,
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'No openings to show yet.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          // Loaded state — show the list of cards
+          return ListView.builder(
+            itemCount: postings.length,
+            itemBuilder: (context, index) {
+              return PostingCard(
+                posting: postings[index],
+                onTap: () {
+                  // TODO: navigate to detail page in next session
+                },
+              );
+            },
+          );
+        },
       ),
     );
   }

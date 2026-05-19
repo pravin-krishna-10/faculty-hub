@@ -160,3 +160,8 @@
 - Build PostingsService — Dart wrapper around Firestore reads
 - Replace HomeScreen placeholder with real feed UI (cards, filter chips, segment toggle)
 - Test that the 6 sample postings appear correctly in the feed
+## Pre-launch TODOs (must do before public)
+- Email verification on signup — required for the "verified institute member" trust model
+- Migrate institute email enforcement from dev mode (.ac.in / .edu.in only)
+- Tighten Firestore security rules (currently in test mode)
+- Set up custom domain with SPF/DKIM for better email deliverability
