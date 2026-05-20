@@ -5,6 +5,7 @@ import '../services/postings_service.dart';
 import '../utils/theme.dart';
 import '../widgets/posting_card.dart';
 import 'login_screen.dart';
+import 'posting_detail_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -114,7 +115,12 @@ class HomeScreen extends StatelessWidget {
               return PostingCard(
                 posting: postings[index],
                 onTap: () {
-                  // TODO: navigate to detail page in next session
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          PostingDetailScreen(posting: postings[index]),
+                    ),
+                  );
                 },
               );
             },
