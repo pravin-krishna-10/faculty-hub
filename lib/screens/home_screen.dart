@@ -8,6 +8,7 @@ import 'login_screen.dart';
 import 'posting_detail_screen.dart';
 import '../models/posting_filters.dart';
 import '../widgets/filter_bar.dart';
+import '../widgets/segment_toggle.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -53,6 +54,14 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
+          SegmentToggle(
+            selected: _filters.segment,
+            onChanged: (newSegment) {
+              setState(() {
+                _filters = _filters.copyWith(segment: newSegment);
+              });
+            },
+          ),
           FilterBar(
             filters: _filters,
             onFiltersChanged: (newFilters) {

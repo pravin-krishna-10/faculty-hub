@@ -1,12 +1,17 @@
 /// Holds the currently active filters for the home feed.
 /// All fields are nullable — null means "no filter applied for this field".
+
+enum PostingSegment { all, faculty, research }
+
 class PostingFilters {
   final String? discipline;
   final String? positionType;
   final String? city;
   final String? source;
+  final PostingSegment segment;
 
   const PostingFilters({
+    this.segment = PostingSegment.all,
     this.discipline,
     this.positionType,
     this.city,
@@ -23,6 +28,7 @@ class PostingFilters {
   /// Returns a copy with one or more fields changed.
   /// Pass `clearX: true` to explicitly clear a field.
   PostingFilters copyWith({
+    PostingSegment? segment,
     String? discipline,
     String? positionType,
     String? city,
@@ -33,6 +39,7 @@ class PostingFilters {
     bool clearSource = false,
   }) {
     return PostingFilters(
+      segment: segment ?? this.segment,
       discipline: clearDiscipline ? null : (discipline ?? this.discipline),
       positionType: clearPositionType
           ? null
@@ -40,5 +47,31 @@ class PostingFilters {
       city: clearCity ? null : (city ?? this.city),
       source: clearSource ? null : (source ?? this.source),
     );
+  }
+
+  /// Returns the list of position_type keys that belong to the current segment.
+  /// Returns null for "All" — meaning don't filter by position type group.
+  List<String>? get segmentPositionTypes {
+    switch (segment) {
+      case PostingSegment.all:
+        return null;
+      case PostingSegment.faculty:
+        return const [
+          'asst_prof',
+          'assoc_prof',
+          'professor',
+          'visiting_faculty',
+          'adjunct',
+        ];
+      case PostingSegment.research:
+        return const [
+          'jrf',
+          'srf',
+          'project_associate',
+          'phd_position',
+          'postdoc',
+          'internship',
+        ];
+    }
   }
 }

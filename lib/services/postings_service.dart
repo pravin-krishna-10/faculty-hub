@@ -35,6 +35,16 @@ class PostingsService {
     if (filters?.source != null) {
       query = query.where('source', isEqualTo: filters!.source);
     }
+    // Segment filter: if a group is selected, use whereIn on position_type.
+    // Only applies when no specific positionType is already set.
+    if (filters != null &&
+        filters.positionType == null &&
+        filters.segmentPositionTypes != null) {
+      query = query.where(
+        'position_type',
+        whereIn: filters.segmentPositionTypes,
+      );
+    }
 
     query = query.orderBy('created_at', descending: true);
 
