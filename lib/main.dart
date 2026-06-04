@@ -3,7 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 import 'screens/login_screen.dart';
-import 'screens/home_screen.dart';
+import 'screens/main_shell.dart';
 import 'services/auth_service.dart';
 
 void main() async {
@@ -51,7 +51,7 @@ class AuthGate extends StatelessWidget {
 
         // Signed in → home. Otherwise → login.
         if (snapshot.hasData && snapshot.data != null) {
-          return const HomeScreen();
+          return const MainShell();
         }
         return const LoginScreen();
       },
