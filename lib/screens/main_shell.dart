@@ -4,6 +4,7 @@ import 'home_screen.dart';
 import 'saved_screen.dart';
 import 'activity_screen.dart';
 import 'profile_screen.dart';
+import 'post_vacancy_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -24,14 +25,9 @@ class _MainShellState extends State<MainShell> {
 
   void _onTabTap(int index) {
     if (index == 2) {
-      // The "+" Post button — not a real tab.
-      // For now, show a snackbar. Cycle 3 will open the post form.
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Post form coming in Cycle 3'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const PostVacancyScreen()));
       return;
     }
     // Map nav index (0,1,3,4) → screen index (0,1,2,3)
