@@ -9,6 +9,7 @@ import 'posting_detail_screen.dart';
 import '../models/posting_filters.dart';
 import '../widgets/filter_bar.dart';
 import '../widgets/segment_toggle.dart';
+import '../widgets/feed_search_bar.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -54,6 +55,17 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
+          FeedSearchBar(
+            initialValue: _filters.searchQuery,
+            onChanged: (value) {
+              setState(() {
+                _filters = _filters.copyWith(
+                  searchQuery: value,
+                  clearSearch: value == null,
+                );
+              });
+            },
+          ),
           SegmentToggle(
             selected: _filters.segment,
             onChanged: (newSegment) {
@@ -105,7 +117,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 }
 
-                final postings = snapshot.data ?? [];
+                final allPostings = snapshot.data ?? [];
+                final postings = _filters
+                    .applySearch(allPostings)
+                    .cast<Posting>();
 
                 // Empty state
                 if (postings.isEmpty) {

@@ -9,6 +9,7 @@ class PostingFilters {
   final String? city;
   final String? source;
   final PostingSegment segment;
+  final String? searchQuery;
 
   const PostingFilters({
     this.segment = PostingSegment.all,
@@ -16,6 +17,7 @@ class PostingFilters {
     this.positionType,
     this.city,
     this.source,
+    this.searchQuery,
   });
 
   /// Returns true if any filter is active.
@@ -33,10 +35,12 @@ class PostingFilters {
     String? positionType,
     String? city,
     String? source,
+    String? searchQuery,
     bool clearDiscipline = false,
     bool clearPositionType = false,
     bool clearCity = false,
     bool clearSource = false,
+    bool clearSearch = false,
   }) {
     return PostingFilters(
       segment: segment ?? this.segment,
@@ -46,6 +50,7 @@ class PostingFilters {
           : (positionType ?? this.positionType),
       city: clearCity ? null : (city ?? this.city),
       source: clearSource ? null : (source ?? this.source),
+      searchQuery: clearSearch ? null : (searchQuery ?? this.searchQuery),
     );
   }
 
@@ -73,5 +78,25 @@ class PostingFilters {
           'internship',
         ];
     }
+  }
+
+  /// Filters a list of postings by the current searchQuery.
+  /// Returns the input list if searchQuery is null or empty.
+  /// Searches across: institute, discipline, specialization, city, description.
+  List<dynamic> applySearch(List<dynamic> postings) {
+    if (searchQuery == null || searchQuery!.trim().isEmpty) {
+      return postings;
+    }
+    final q = searchQuery!.toLowerCase().trim();
+    return postings.where((p) {
+      final fields = [
+        p.instituteName,
+        p.discipline,
+        p.specialization ?? '',
+        p.city,
+        p.description ?? '',
+      ];
+      return fields.any((f) => f.toString().toLowerCase().contains(q));
+    }).toList();
   }
 }
