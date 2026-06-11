@@ -114,6 +114,184 @@ class _PostVacancyScreenState extends State<PostVacancyScreen> {
     );
   }
 
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hint,
+    bool isRequired = false,
+    int maxLines = 1,
+    TextInputType? keyboardType,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: TextFormField(
+        controller: controller,
+        maxLines: maxLines,
+        keyboardType: keyboardType,
+        style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: const TextStyle(
+            fontSize: 13,
+            color: AppColors.textTertiary,
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 10,
+          ),
+          isDense: true,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: const BorderSide(color: AppColors.border),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: const BorderSide(color: AppColors.border),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: const BorderSide(color: AppColors.primary),
+          ),
+        ),
+        validator: isRequired
+            ? (value) =>
+                  (value == null || value.trim().isEmpty) ? 'Required' : null
+            : null,
+      ),
+    );
+  }
+
+  Widget _buildDeadlineField() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: InkWell(
+        onTap: () async {
+          final now = DateTime.now();
+          final picked = await showDatePicker(
+            context: context,
+            initialDate: _deadline ?? now.add(const Duration(days: 14)),
+            firstDate: now,
+            lastDate: now.add(const Duration(days: 365)),
+          );
+          if (picked != null) {
+            setState(() => _deadline = picked);
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _deadline == null
+                      ? 'Pick a deadline'
+                      : _formatDate(_deadline!),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: _deadline == null
+                        ? AppColors.textTertiary
+                        : AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              const Icon(
+                Icons.calendar_today,
+                size: 16,
+                color: AppColors.textSecondary,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
+
+  Widget _buildSourceField() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: _sourceOption(
+              'official',
+              'Official',
+              'Posted on institute website',
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _sourceOption(
+              'heard',
+              'Heard',
+              'Internal info, not yet official',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sourceOption(String value, String label, String subtitle) {
+    final isSelected = _source == value;
+    return InkWell(
+      onTap: () => setState(() => _source = value),
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primaryLight : Colors.transparent,
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.border,
+            width: isSelected ? 1.2 : 0.8,
+          ),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? AppColors.primary : AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildEmploymentTypeField() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -184,6 +362,30 @@ class _PostVacancyScreenState extends State<PostVacancyScreen> {
               const SizedBox(height: 12),
               _fieldLabel('Discipline', required: true),
               _buildDisciplineField(),
+              const SizedBox(height: 24),
+              _sectionHeader('LOCATION & TIMING'),
+              _fieldLabel('Specialization (optional)'),
+              _buildTextField(
+                controller: _specializationController,
+                hint: 'e.g. Machine Learning, Organic Chemistry',
+              ),
+              const SizedBox(height: 12),
+              _fieldLabel('Institute', required: true),
+              _buildTextField(
+                controller: _instituteController,
+                hint: 'e.g. IIT Bombay',
+                isRequired: true,
+              ),
+              const SizedBox(height: 12),
+              _fieldLabel('City', required: true),
+              _buildTextField(
+                controller: _cityController,
+                hint: 'e.g. Mumbai',
+                isRequired: true,
+              ),
+              const SizedBox(height: 12),
+              _fieldLabel('Application deadline', required: true),
+              _buildDeadlineField(),
               const SizedBox(height: 24),
             ],
           ),
