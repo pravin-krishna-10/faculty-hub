@@ -59,4 +59,11 @@ class PostingsService {
     if (!doc.exists) return null;
     return Posting.fromFirestore(doc);
   }
+
+  /// Creates a new posting document in Firestore.
+  /// Returns the document ID of the newly created posting.
+  Future<String> createPosting(Posting posting) async {
+    final docRef = await _postings.add(posting.toFirestore());
+    return docRef.id;
+  }
 }

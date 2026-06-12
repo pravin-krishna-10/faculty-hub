@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../utils/theme.dart';
 import '../utils/posting_constants.dart';
 import '../utils/disciplines.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../models/posting.dart';
+import '../services/postings_service.dart';
 
 class PostVacancyScreen extends StatefulWidget {
   const PostVacancyScreen({super.key});
@@ -293,7 +296,6 @@ class _PostVacancyScreenState extends State<PostVacancyScreen> {
   }
 
   Future<void> _handleSubmit() async {
-    // Validate all form fields
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -304,7 +306,6 @@ class _PostVacancyScreenState extends State<PostVacancyScreen> {
       return;
     }
 
-    // Extra validation for fields not in TextFormField
     if (_deadline == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -317,22 +318,66 @@ class _PostVacancyScreenState extends State<PostVacancyScreen> {
 
     setState(() => _isSubmitting = true);
 
-    // We'll wire the actual Firestore write next step.
-    // For now, just simulate a delay and show success.
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception('Not signed in');
 
-    if (!mounted) return;
-    setState(() => _isSubmitting = false);
+      final now = DateTime.now();
+      final posting = Posting(
+        id: '', // Firestore generates this
+        positionType: _positionType!,
+        employmentType: _employmentType!,
+        discipline: _discipline!,
+        specialization: _specializationController.text.trim().isEmpty
+            ? null
+            : _specializationController.text.trim(),
+        instituteName: _instituteController.text.trim(),
+        city: _cityController.text.trim(),
+        deadline: _deadline!,
+        howToApply: _howToApplyController.text.trim(),
+        source: _source,
+        salaryRange: _salaryController.text.trim().isEmpty
+            ? null
+            : _salaryController.text.trim(),
+        duration: _durationController.text.trim().isEmpty
+            ? null
+            : _durationController.text.trim(),
+        description: _descriptionController.text.trim().isEmpty
+            ? null
+            : _descriptionController.text.trim(),
+        postedByUid: user.uid,
+        postedByName: user.email ?? 'Unknown',
+        postedByInstitute: 'Unknown',
+        postedByRole: 'faculty',
+        createdAt: now,
+        updatedAt: now,
+        expiresAt: _deadline!.add(const Duration(days: 7)),
+        status: 'active',
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Form validated successfully — Firestore write coming next',
+      await PostingsService().createPosting(posting);
+
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Posting shared with the community'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
         ),
-        backgroundColor: Colors.green,
-        duration: Duration(seconds: 2),
-      ),
-    );
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not share posting: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildEmploymentTypeField() {

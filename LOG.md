@@ -165,3 +165,37 @@
 - Migrate institute email enforcement from dev mode (.ac.in / .edu.in only)
 - Tighten Firestore security rules (currently in test mode)
 - Set up custom domain with SPF/DKIM for better email deliverability
+## 2026-06-09 — Cycle 3 complete
+
+### Built (across multiple sessions since last log)
+- Filter chips: Discipline, Position type, City, Source
+- All/Faculty/Research segment toggle above filter bar
+- Bottom navigation bar with 5 tabs (Home, Saved, Post, Activity, Profile)
+- Placeholder screens for Saved, Activity, Profile (with sign-out on Profile)
+- Client-side search bar with live filtering
+- MainShell wrapping all main screens with bottom nav
+- Switched auth from magic-link to email + password (much better UX)
+- PostVacancyScreen with full form: position details, location/timing, application/source, optional details
+- Conditional Duration field (only shows for non-permanent positions)
+- Date picker for deadline
+- Form validation with required field markers
+- Firestore createPosting method
+- End-to-end posting flow: open form → fill → submit → posting appears in feed
+
+### Cycle status
+- Cycle 1 (Auth): COMPLETE
+- Cycle 2 (Home feed + discovery): COMPLETE
+- Cycle 3 (Post flow): COMPLETE (~60% of total project done)
+
+### Known issues / pre-launch TODOs
+- Email verification on signup
+- Enforce .ac.in / .edu.in (currently dev mode accepts any email)
+- Tighten Firestore security rules (currently allows any signed-in user)
+- Custom domain with SPF/DKIM for email deliverability
+- Profile screen needs real user details (currently postedByInstitute defaults to "Unknown")
+- Add Android app to Firebase project
+
+### Next: Cycle 4
+- Build Profile screen (discipline, institute, real name)
+- Saved tab (bookmark postings, view bookmarked)
+- Activity tab (postings I've created, applied to)
