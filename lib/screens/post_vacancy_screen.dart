@@ -292,6 +292,49 @@ class _PostVacancyScreenState extends State<PostVacancyScreen> {
     );
   }
 
+  Future<void> _handleSubmit() async {
+    // Validate all form fields
+    if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill all required fields'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    // Extra validation for fields not in TextFormField
+    if (_deadline == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please pick an application deadline'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    // We'll wire the actual Firestore write next step.
+    // For now, just simulate a delay and show success.
+    await Future.delayed(const Duration(seconds: 1));
+
+    if (!mounted) return;
+    setState(() => _isSubmitting = false);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Form validated successfully — Firestore write coming next',
+        ),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
   Widget _buildEmploymentTypeField() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -383,9 +426,80 @@ class _PostVacancyScreenState extends State<PostVacancyScreen> {
                 hint: 'e.g. Mumbai',
                 isRequired: true,
               ),
-              const SizedBox(height: 12),
               _fieldLabel('Application deadline', required: true),
               _buildDeadlineField(),
+              const SizedBox(height: 24),
+              _sectionHeader('APPLICATION & SOURCE'),
+              _fieldLabel('How to apply', required: true),
+              _buildTextField(
+                controller: _howToApplyController,
+                hint: 'Email, website link, or instructions',
+                isRequired: true,
+                maxLines: 2,
+              ),
+              const SizedBox(height: 12),
+              _fieldLabel('Source', required: true),
+              _buildSourceField(),
+              const SizedBox(height: 24),
+              _sectionHeader('OPTIONAL DETAILS'),
+              _fieldLabel('Salary range (optional)'),
+              _buildTextField(
+                controller: _salaryController,
+                hint: 'e.g. 8-12 LPA or 37000/month',
+              ),
+              const SizedBox(height: 12),
+              if (_employmentType != null &&
+                  _employmentType != 'full_time_permanent') ...[
+                _fieldLabel('Duration', required: true),
+                _buildTextField(
+                  controller: _durationController,
+                  hint: 'e.g. 2 years, 1 semester, 8 weeks',
+                  isRequired: true,
+                ),
+                const SizedBox(height: 12),
+              ],
+              _fieldLabel('Description (optional)'),
+              _buildTextField(
+                controller: _descriptionController,
+                hint: 'Additional context, qualifications, expectations...',
+                maxLines: 4,
+              ),
+              const SizedBox(height: 32),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: _isSubmitting ? null : _handleSubmit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: AppColors.border,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'Share with community',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
               const SizedBox(height: 24),
             ],
           ),
